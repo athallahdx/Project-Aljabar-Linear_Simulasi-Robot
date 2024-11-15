@@ -39,16 +39,43 @@ ax.set_title('3 Omniwheel Robot Simulation', fontweight='bold')
 circle = patches.Circle((0, 0), L, edgecolor='red', facecolor='red')
 ax.add_patch(circle)
 
+def matrix_multiply(A, B):
+    # Number of rows in A and B
+    rows_A, cols_A = len(A), len(A[0])
+    rows_B, cols_B = len(B), len(B[0])
+
+    # Ensure the number of columns in A matches the number of rows in B
+    if cols_A != rows_B:
+        raise ValueError("Number of columns in A must equal number of rows in B")
+
+    # Initialize the result matrix with zeros
+    result = [[0 for _ in range(cols_B)] for _ in range(rows_A)]
+
+    # Perform matrix multiplication
+    for i in range(rows_A):
+        for j in range(cols_B):
+            for k in range(cols_A):
+                result[i][j] += A[i][k] * B[k][j]
+
+    return result
+
 # Define the robot's speed components
 def get_speed_components(v, theta):
     vx = v * np.cos(theta)
     vy = v * np.sin(theta)
     return vx, vy
 
-# Define the wheel velocity function
-def wheel_velocity(vx, vy, alpha, omega, l):
-    velocity = (-vx * np.sin(alpha) + vy * np.cos(alpha) + omega * l)
-    return velocity
+def wheel_velocity(vx, vy, rads, omega, L):
+    parameter_matrix = [[-vx], [vy], [omega]]
+
+    inverse_kinematics_matrix = [
+        [np.sin(rads[0]), np.cos(rads[0]), L],
+        [np.sin(rads[1]), np.cos(rads[1]), L],
+        [np.sin(rads[2]), np.cos(rads[2]), L]
+    ]
+
+    velocities = matrix_multiply(inverse_kinematics_matrix, parameter_matrix)
+    return [vel[0] for vel in velocities]
 
 # Function to place rectangles (wheels) around the circle
 def add_wheel(angle_degree, distance, wheel_number):
@@ -108,9 +135,8 @@ def update(frame):
     vx, vy = get_speed_components(v, angle_radians)
     
     # Calculate the wheel velocities for each wheel
-    v1 = wheel_velocity(vx, vy, np.radians(90), omega, L)
-    v2 = wheel_velocity(vx, vy, np.radians(210), omega, L)
-    v3 = wheel_velocity(vx, vy, np.radians(330), omega, L)
+    vws = wheel_velocity(vx, vy, [a1_rad, a2_rad, a3_rad], omega, L)
+    v1, v2, v3 = vws
     
     # Print the wheel velocities
     print(f"Angle {angle_degrees:.2f}: v1: {v1:.2f}, v2: {v2:.2f}, v3: {v3:.2f}")
