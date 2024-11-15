@@ -30,6 +30,11 @@ a3 = 330    # angle of wheel 3
 a1_rad = np.radians(a1)
 a2_rad = np.radians(a2)
 a3_rad = np.radians(a3)
+inverse_kinematics_matrix = [
+    [-np.sin(a1_rad), np.cos(a1_rad), L],
+    [-np.sin(a2_rad), np.cos(a2_rad), L],
+    [-np.sin(a3_rad), np.cos(a3_rad), L]
+]
 
 # Create a figure and axis
 fig, ax = plt.subplots()
@@ -59,6 +64,43 @@ def matrix_multiply(A, B):
 
     return result
 
+def inverse_matrix(matrix):
+    n = len(matrix)
+
+    # Ensure the matrix is square
+    if any(len(row) != n for row in matrix):
+        raise ValueError("Matrix must be square")
+
+    # Create an augmented matrix [A|I]
+    augmented_matrix = [row + [1 if i == j else 0 for j in range(n)] for i, row in enumerate(matrix)]
+
+    # Perform Gaussian elimination
+    for i in range(n):
+        # Find the pivot
+        pivot = augmented_matrix[i][i]
+        if pivot == 0:
+            raise ValueError("Matrix is not invertible")
+
+        # Normalize the pivot row
+        augmented_matrix[i] = [x / pivot for x in augmented_matrix[i]]
+
+        # Eliminate the current column in other rows
+        for j in range(n):
+            if i != j:
+                factor = augmented_matrix[j][i]
+                augmented_matrix[j] = [
+                    augmented_matrix[j][k] - factor * augmented_matrix[i][k]
+                    for k in range(2 * n)
+                ]
+
+    # Extract the inverse matrix from the augmented matrix
+    inverse = [row[n:] for row in augmented_matrix]
+
+    return inverse
+
+forward_kinematics_matrix = inverse_matrix(inverse_kinematics_matrix)
+print(forward_kinematics_matrix)
+
 # Define the robot's speed components
 def get_speed_components(v, theta):
     vx = v * np.cos(theta)
@@ -66,13 +108,7 @@ def get_speed_components(v, theta):
     return vx, vy
 
 def wheel_velocity(vx, vy, rads, omega, L):
-    parameter_matrix = [[-vx], [vy], [omega]]
-
-    inverse_kinematics_matrix = [
-        [np.sin(rads[0]), np.cos(rads[0]), L],
-        [np.sin(rads[1]), np.cos(rads[1]), L],
-        [np.sin(rads[2]), np.cos(rads[2]), L]
-    ]
+    parameter_matrix = [[vx], [vy], [omega]]
 
     velocities = matrix_multiply(inverse_kinematics_matrix, parameter_matrix)
     return [vel[0] for vel in velocities]
@@ -148,9 +184,7 @@ def update(frame):
     # Update the robot's position based on the speed components
     rads = np.radians(frame)
     arrow_patch = create_arrow(0, 0, angle_radians) 
-    ax.add_patch(arrow_patch)
-
-    
+    ax.add_patch(arrow_patch)    
 
 # Animate the plot using FuncAnimation
 ani = FuncAnimation(fig, update, frames=np.arange(0, 360, 1), interval=25)
