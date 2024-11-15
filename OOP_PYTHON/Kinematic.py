@@ -19,4 +19,5 @@ class Kinematic:
             )
             print(f"Wheel {wheel.wheel_number} Velocity: {wheel.linear_velocity:.2f}")
 
-    def forward_kinematics(self):
+    # def forward_kinematics(self):
+        
