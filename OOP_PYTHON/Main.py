@@ -11,4 +11,7 @@ ax.set_title('3 Omniwheel Robot Simulation', fontweight='bold')
 
 ambatron = Robot(0, 0, 10, edgecolor='red', facecolor='red')
 ambatron.add_to_axes(ax)
-
+ax.set_aspect('equal', 'box')
+ax.set_xlim(-20, 20)
+ax.set_ylim(-20, 20)
+plt.show()
