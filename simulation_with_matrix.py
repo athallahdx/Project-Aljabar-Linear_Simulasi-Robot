@@ -99,7 +99,7 @@ def inverse_matrix(matrix):
     return inverse
 
 forward_kinematics_matrix = inverse_matrix(inverse_kinematics_matrix)
-print(forward_kinematics_matrix)
+# print(forward_kinematics_matrix)
 
 # Define the robot's speed components
 def get_speed_components(v, theta):
@@ -112,6 +112,11 @@ def wheel_velocity(vx, vy, rads, omega, L):
 
     velocities = matrix_multiply(inverse_kinematics_matrix, parameter_matrix)
     return [vel[0] for vel in velocities]
+
+def forward_kinematics(v1, v2, v3):
+    velocities = [[v1], [v2], [v3]]  # Wrap as a column vector
+    speeds = matrix_multiply(forward_kinematics_matrix, velocities)
+    return [speed[0] for speed in speeds]  # Flatten the result to a list
 
 # Function to place rectangles (wheels) around the circle
 def add_wheel(angle_degree, distance, wheel_number):
@@ -150,6 +155,9 @@ arrow_patch = None
 
 # Update function for animation
 def update(frame):
+    # velocity = forward_kinematics(0, -2.6, 2.6)
+    # print(velocity)
+
     global arrow_patch 
     pygame.event.pump()
 
